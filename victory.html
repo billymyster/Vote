@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Winner!</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+    text-align: center;
+    padding-top: 150px;
+  }
+  h1 {
+    font-size: 48px;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+  }
+  #winner {
+    font-size: 36px;
+    margin-top: 50px;
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+    display: inline-block;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+
+<h1>🎉 The Winner! 🎉</h1>
+<div id="winner">Loading...</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLC1dv6YguVj4A1bl2z7PQbSUkL8GROavjF4XP73UAyoXAZmOjalSNDFkVE3gRtJwt2A/exec";
+
+
+fetch(SCRIPT_URL)
+  .then(res => res.json())
+  .then(data => {
+
+    data.sort((a,b) => b.score - a.score);
+    const winner = data[0].song;
+    document.getElementById("winner").textContent = winner;
+  })
+  .catch(err => {
+    document.getElementById("winner").textContent = "Error loading winner.";
+    console.error(err);
+  });
+</script>
+
+</body>
+</html>

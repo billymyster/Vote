@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rank Your Top 5 Songs</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #fff;
+  padding: 20px;
+  min-height: 100vh;
+}
+h1, h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+form {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  border-radius: 15px;
+  max-width: 600px;
+  margin: auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+select {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+}
+button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background: #ff6f61;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: #ff3b2e;
+}
+#scoreContainer {
+  max-width: 600px;
+  margin: 20px auto;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  display: none; 
+}
+#scoreboard {
+  list-style: none;
+  padding: 0;
+}
+#scoreboard li {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+}
+</style>
+</head>
+<body>
+
+<a href="victory.html"
+   style="
+     position: absolute; 
+     top: 75%;  
+     left: 85%; 
+     transform: translate(-50%, -50%);
+     width: 120px; 
+     height: 60px; 
+     display: block;
+     z-index: 1000;
+     background: transparent; 
+   ">
+</a>
+
+<h1>Rank Your Top 5 Songs</h1>
+
+<div id="voteContainer">
+  <form id="voteForm">
+    <label for="first">First Pick (4 points)</label>
+    <select id="first" required></select>
+
+    <label for="second">Second Pick (3 points)</label>
+    <select id="second" required></select>
+
+    <label for="third">Third Pick (2 points)</label>
+    <select id="third" required></select>
+
+    <label for="fourth">Fourth Pick (1 points)</label>
+    <select id="fourth" required></select>
+
+    <button type="submit">Submit Vote</button>
+  </form>
+</div>
+
+<div id="scoreContainer">
+  <h2>Current Scores</h2>
+  <ul id="scoreboard"></ul>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLC1dv6YguVj4A1bl2z7PQbSUkL8GROavjF4XP73UAyoXAZmOjalSNDFkVE3gRtJwt2A/exec";
+
+const selects = [
+  document.getElementById("first"),
+  document.getElementById("second"),
+  document.getElementById("third"),
+  document.getElementById("fourth"),
+];
+
+fetch(SCRIPT_URL + "?type=songs")
+  .then(res => res.json())
+  .then(songs => {
+    populateSelects(songs);
+  })
+  .catch(err => {
+    alert("Failed to load songs from Sheet");
+    console.error(err);
+  });
+
+function populateSelects(songs) {
+  selects.forEach(select => {
+    select.innerHTML = "<option value=''>--Select a song--</option>";
+    songs.forEach(song => {
+      const option = document.createElement("option");
+      option.value = song;
+      option.textContent = song;
+      select.appendChild(option);
+    });
+  });
+}
+
+function updateOptions() {
+  const chosen = selects.map(s => s.value);
+  selects.forEach(select => {
+    Array.from(select.options).forEach(option => {
+      if(option.value === "") return;
+      option.disabled = chosen.includes(option.value) && option.value !== select.value;
+    });
+  });
+}
+
+selects.forEach(select => select.addEventListener("change", updateOptions));
+
+document.getElementById("voteForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const data = {
+    first: selects[0].value,
+    second: selects[1].value,
+    third: selects[2].value,
+    fourth: selects[3].value
+  };
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    document.getElementById("scoreContainer").style.display = "block";
+    updateScores();
+  });
+});
+
+function updateScores() {
+  fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(data => {
+      const scoreboard = document.getElementById("scoreboard");
+      scoreboard.innerHTML = "";
+
+      data.sort((a,b) => b.score - a.score).forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${item.song}: ${item.score} points`;
+
+        if(index === 0) li.style.backgroundColor = "gold";
+        else if(index === 1) li.style.backgroundColor = "silver";
+        else if(index === 2) li.style.backgroundColor = "#cd7f32";
+
+        scoreboard.appendChild(li);
+      });
+    });
+}
+</script>
+
+
+</body>
+</html>
